@@ -54,8 +54,8 @@ Q_DECLARE_OPERATORS_FOR_FLAGS(CommandFlags)
 class LaunchyWidget : public QWidget {
     Q_OBJECT
 public:
-    LaunchyWidget(CommandFlags command);
-    virtual ~LaunchyWidget();
+    static LaunchyWidget* instance();
+    static void cleanup();
 
 public:
     void executeStartupCommand(int command);
@@ -74,7 +74,7 @@ public slots:
     void setOpaqueness(int level);
 
 protected:
-    virtual void showEvent(QShowEvent *event);
+    virtual void showEvent(QShowEvent* event);
     virtual void paintEvent(QPaintEvent* event);
     virtual void closeEvent(QCloseEvent* event);
     //virtual void focusInEvent(QFocusEvent* event);
@@ -85,6 +85,9 @@ protected:
     virtual void mouseMoveEvent(QMouseEvent* event);
     virtual void mouseReleaseEvent(QMouseEvent* event);
     virtual void contextMenuEvent(QContextMenuEvent* event);
+    virtual void changeEvent(QEvent* event);
+
+    virtual void focusLaunchy();
 
 protected:
     void saveSettings();
@@ -96,7 +99,9 @@ protected:
     void showAlternativeList();
     void hideAlternativeList();
     void updateAlternativeList(bool resetSelection = true);
-    void updateOutputBox(bool resetAlternativesSelection = true);
+    void updateOutput(bool resetAlternativesSelection = true);
+    void updateOutputItem(const CatItem& item);
+    void updateOutputSize();
     void searchOnInput();
     void loadPosition(QPoint pt);
     void savePosition();
@@ -104,8 +109,9 @@ protected:
     void doBackTab();
     void doEnter();
     void processKey();
-    void launchItem(CatItem& item);
+    void launchItem();
     void startDropTimer();
+    void retranslateUi();
 
 protected slots:
     void showOptionDialog();
@@ -114,7 +120,7 @@ protected slots:
     void catalogProgressUpdated(int);
     void catalogBuilt();
     void setFadeLevel(double level);
-    void iconExtracted(int index, QString path, QIcon icon);
+    void iconExtracted(int index, const QString& path, const QIcon& icon);
     void trayIconActivated(QSystemTrayIcon::ActivationReason reason);
     void reloadSkin();
     void exit();
@@ -126,6 +132,12 @@ protected slots:
     void onInputBoxInputMethod(QInputMethodEvent* event);
     void onInputBoxTextEdited(const QString& str);
     void onSecondInstance();
+
+protected:
+    LaunchyWidget(CommandFlags command);
+    Q_DISABLE_COPY(LaunchyWidget)
+    friend void createLaunchyWidget(CommandFlags command);
+    virtual ~LaunchyWidget();
 
 protected:
     QString m_currentSkin;
@@ -169,7 +181,13 @@ protected:
 
     OptionDialog* m_optionDialog;
     bool m_optionsOpen;
+
+private:
+    static LaunchyWidget* s_instance;
 };
 
-LaunchyWidget* createLaunchyWidget(CommandFlags command);
+void createLaunchyWidget(CommandFlags command);
+
+#define g_mainWidget launchy::LaunchyWidget::instance()
+
 }

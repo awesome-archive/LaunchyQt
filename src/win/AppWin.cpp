@@ -18,64 +18,15 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
 
-#include "precompiled.h"
+#include "Precompiled.h"
 #include "AppWin.h"
+#include "LaunchyWidgetWin.h"
 #include "UtilWin.h"
 #include "LaunchyWidget.h"
 #include "IconProviderWin.h"
 #include "CrashDumper.h"
 
 namespace launchy {
-
-// Override the main widget to handle incoming system messages. We could have done this in the QApplication
-// event handler, but then we'd have to filter out the duplicates for messages like WM_SETTINGCHANGE.
-class LaunchyWidgetWin : public LaunchyWidget {
-public:
-    LaunchyWidgetWin(CommandFlags command)
-        : LaunchyWidget(command) {
-        commandMessageId = RegisterWindowMessage(_T("LaunchyCommand"));
-    }
-
-    virtual bool nativeEvent(const QByteArray &eventType, void *message, long *result) {
-        MSG* msg = (MSG*)message;
-        switch (msg->message) {
-        case WM_SETTINGCHANGE:
-            // Refresh Launchy's environment on settings changes
-            if (msg->lParam && _tcscmp((TCHAR*)msg->lParam, _T("Environment")) == 0) {
-                UpdateEnvironment();
-            }
-            break;
-
-        case WM_ENDSESSION:
-            // Ensure settings are saved
-            saveSettings();
-            break;
-
-            // Might need to capture these two messages if Vista gives any problems with alpha borders
-            // when restoring from standby
-        case WM_POWERBROADCAST:
-            break;
-        case WM_WTSSESSION_CHANGE:
-            break;
-
-        default:
-            if (msg->message == commandMessageId) {
-                // A Launchy startup command
-                executeStartupCommand((int)msg->wParam);
-            }
-            break;
-        }
-        return LaunchyWidget::nativeEvent(eventType, message, result);
-    }
-
-private:
-    UINT commandMessageId;
-};
-
-// Create the main widget for the application
-LaunchyWidget* createLaunchyWidget(CommandFlags command) {
-    return new LaunchyWidgetWin(command);
-}
 
 AppWin::AppWin(int& argc, char** argv)
     : AppBase(argc, argv),
@@ -90,18 +41,16 @@ AppWin::AppWin(int& argc, char** argv)
 }
 
 AppWin::~AppWin() {
-    if (localMutex)
+    if (localMutex) {
         CloseHandle(localMutex);
-    if (globalMutex)
+    }
+    if (globalMutex) {
         CloseHandle(globalMutex);
+    }
     if (m_crashDumper) {
         delete m_crashDumper;
         m_crashDumper = nullptr;
     }
-}
-
-void AppWin::setPreferredIconSize(int size) {
-    ((IconProviderWin*)m_iconProvider)->setPreferredIconSize(size);
 }
 
 QHash<QString, QList<QString> > AppWin::getDirectories() {
@@ -126,23 +75,32 @@ QHash<QString, QList<QString> > AppWin::getDirectories() {
 QList<Directory> AppWin::getDefaultCatalogDirectories() {
     QList<Directory> list;
 
-    Directory tmp;
+    Directory dir1;
+    dir1.name = GetShellDirectory(CSIDL_COMMON_STARTMENU);
+    dir1.types << "*.lnk";
+    dir1.indexDirs = false;
+    list.append(dir1);
 
-    tmp.name = GetShellDirectory(CSIDL_COMMON_STARTMENU);
-    tmp.types << "*.lnk";
-    list.append(tmp);
+    Directory dir2;
+    dir2.name = GetShellDirectory(CSIDL_STARTMENU);
+    dir2.types << "*.lnk";
+    dir2.indexDirs = false;
+    list.append(dir2);
 
-    tmp.name = GetShellDirectory(CSIDL_STARTMENU);
-    list.append(tmp);
+    Directory dir3;
+    dir3.name = "utilities\\";
+    dir3.types << "*.lnk";
+    dir3.types << "*.cmd";
+    dir3.types << "*.vbs";
+    dir3.indexDirs = false;
+    list.append(dir3);
 
-    tmp.name = "utilities\\";
-    tmp.indexDirs = false;
-    list.append(tmp);
-
-    Directory tmp2;
-    tmp2.name = "%appdata%\\Microsoft\\Internet Explorer\\Quick Launch";
-    tmp2.types << "*.*";
-    list.append(tmp2);
+    /*
+    Directory dir4;
+    dir4.name = "%appdata%\\Microsoft\\Internet Explorer\\Quick Launch";
+    dir4.types << "*.*";
+    list.append(dir4);
+    */
 
     return list;
 }
@@ -191,7 +149,10 @@ bool AppWin::getComputers(QStringList& computers) const {
 }
 
 // Create the application object
-QApplication* createApplication(int& argc, char** argv) {
+AppBase* createApplication(int& argc, char** argv) {
+    if (qApp) {
+        return g_app;
+    }
     return new AppWin(argc, argv);
 }
 }

@@ -24,31 +24,30 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 namespace launchy {
 class CharLineEdit : public QLineEdit {
-	Q_OBJECT
+    Q_OBJECT
 public:
-	CharLineEdit(QWidget* parent = 0);
+    CharLineEdit(QWidget* parent = nullptr);
 
     void processKey(QKeyEvent* event);
-	bool focusNextPrevChild(bool next);
-
-	QString separatorText() const;
+    QString separatorText() const;
 
 protected:
     virtual void keyPressEvent(QKeyEvent* event);
     virtual void focusInEvent(QFocusEvent* event);
     virtual void focusOutEvent(QFocusEvent* event);
-    virtual void inputMethodEvent(QInputMethodEvent *event);
+    virtual void inputMethodEvent(QInputMethodEvent* event);
+    virtual bool focusNextPrevChild(bool next);
 
 signals:
-	void keyPressed(QKeyEvent* event);
-	void focusIn();
-	void focusOut();
-	void inputMethod(QInputMethodEvent *event);
+    void keyPressed(QKeyEvent* event);
+    void focusIn();
+    void focusOut();
+    void inputMethod(QInputMethodEvent* event);
 
 private:
-	bool isAtStartOfSeparator() const;
-	bool isAtEndOfSeparator() const;
-	QChar separatorChar() const;
+    bool isAtStartOfSeparator() const;
+    bool isAtEndOfSeparator() const;
+    QChar separatorChar() const;
 };
 }
 

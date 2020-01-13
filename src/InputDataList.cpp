@@ -1,3 +1,20 @@
+/*
+LaunchyQt
+Copyright (C) 2019 Samson Wang
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
 
 #include "InputDataList.h"
 #include "GlobalVar.h"
@@ -39,9 +56,12 @@ void InputDataList::parse(const QString& text) {
 }
 
 QString InputDataList::toString(bool omitLast) const {
-    QString result = "";
+    QString result;
     for (int i = 0; i < count(); ++i) {
         if (i > 0) {
+            if (at(i).getText().isEmpty()) {
+                continue;
+            }
             result += s_separator;
         }
         if (!omitLast || i < count()-1) {

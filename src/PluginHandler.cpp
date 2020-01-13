@@ -21,7 +21,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <QPluginLoader>
 #include "PluginInterface.h"
 #include "PluginMsg.h"
-#include "GlobalVar.h"
 #include "Catalog.h"
 #include "SettingsManager.h"
 #include "PluginLoader.h"
@@ -30,7 +29,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define LIB_EXT ".dll"
 #elif defined(Q_OS_LINUX) || defined(Q_OS_MAC)
 #define LIB_EXT ".so"
-#endif 
+#endif
 
 namespace launchy {
 
@@ -93,22 +92,25 @@ void PluginHandler::getCatalogs(Catalog* catalog, INotifyProgressStep* progressS
 }
 
 int PluginHandler::launchItem(QList<InputData>* inputData, CatItem* result) {
-    if (!m_plugins.contains(result->pluginId) || !m_plugins[result->pluginId].loaded)
-        return 0;
+    if (!m_plugins.contains(result->pluginId) || !m_plugins[result->pluginId].loaded) {
+        return MSG_CONTROL_LAUNCHITEM;
+    }
     return m_plugins[result->pluginId].sendMsg(MSG_LAUNCH_ITEM, (void*)inputData, (void*)result);
 }
 
 QWidget* PluginHandler::doDialog(QWidget* parent, uint id) {
-    if (!m_plugins.contains(id) || !m_plugins[id].loaded)
+    if (!m_plugins.contains(id) || !m_plugins[id].loaded) {
         return NULL;
+    }
     QWidget* newBox = NULL;
     m_plugins[id].sendMsg(MSG_DO_DIALOG, (void*)parent, (void*)&newBox);
     return newBox;
 }
 
 void PluginHandler::endDialog(uint id, bool accept) {
-    if (!m_plugins.contains(id) || !m_plugins[id].loaded)
+    if (!m_plugins.contains(id) || !m_plugins[id].loaded) {
         return;
+    }
     m_plugins[id].sendMsg(MSG_END_DIALOG, (void*)accept);
 }
 
@@ -129,7 +131,7 @@ void PluginHandler::loadPlugins() {
     g_settings->endArray();
 
     // init QSetting for python plugin
-    pluginpy::PluginLoader::initSettings(g_settings.get());
+    pluginpy::PluginLoader::initSettings(g_settings.data());
 
     foreach(QString directory, SettingsManager::instance().directory("plugins")) {
         // Load up the plugins in the plugins/ directory
@@ -191,8 +193,6 @@ void PluginHandler::loadCppPlugin(const QString& pluginName, const QString& plug
         return;
     }
     qDebug() << "Plugin loaded:" << pluginFullPath;
-
-    plugin->settings = &g_settings;
 
     PluginInfo info;
     info.obj = plugin;

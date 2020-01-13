@@ -90,18 +90,20 @@ bool Verby::isMatch(const QString& text1, const QString& text2) {
     return false;
 }
 
-void Verby::addCatItem(QString text, QList<CatItem>* results, QString fullName, QString shortName, QString iconName) {
+void Verby::addCatItem(QString text, QList<CatItem>* results,
+                       QString fullName, QString shortName, QString iconName) {
     if (text.isEmpty() || isMatch(shortName, text)) {
-        CatItem item = CatItem(fullName, shortName, HASH_VERBY, m_libPath + "/" + iconName);
-        item.usage = (*settings)->value("Verby/" + shortName.replace(" ", ""), 0).toInt();
+        CatItem item(fullName, shortName, HASH_VERBY, m_libPath + "/" + iconName);
+        item.usage = launchy::g_settings->value("Verby/" + shortName.replace(" ", ""), 0).toInt();
         results->push_back(item);
     }
 }
 
 void Verby::updateUsage(CatItem& item) {
-    (*settings)->setValue("Verby/" + item.shortName.replace(" ", ""), item.usage + 1);
+    QString verb = item.shortName;
+    verb.replace(" ", ""); // remove spaces to use as configuration key
+    launchy::g_settings->setValue("Verby/" + verb, item.usage + 1);
 }
-
 
 void Verby::getResults(QList<InputData>* inputData, QList<CatItem>* results) {
     if (inputData->count() != 2) {
@@ -158,7 +160,7 @@ int Verby::launchItem(QList<InputData>* inputData, CatItem* item) {
     CatItem& verbItem = inputData->last().getTopResult();
     QString verb = verbItem.shortName;
 
-    qDebug() << "Verby launchItem" << verb;
+    qDebug() << "verby::launchItem:" << noun << verb;
     if (verb == "Run") {
         runProgram(noun, "");
     }

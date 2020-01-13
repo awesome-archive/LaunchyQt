@@ -26,13 +26,16 @@ namespace launchy {
 CharLineEdit::CharLineEdit(QWidget* parent)
     : QLineEdit(parent) {
     setAttribute(Qt::WA_InputMethodEnabled);
+    setContextMenuPolicy(Qt::NoContextMenu);
 #ifdef Q_OS_MAC
     QMacStyle::setFocusRectPolicy(this, QMacStyle::FocusDisabled);
 #endif
 }
 
 void CharLineEdit::processKey(QKeyEvent* event) {
-    qDebug() << "CharLineEdit::processKey" << event->key();
+    qDebug() << "CharLineEdit::processKey, key:" << event->key()
+        << "mod:" << event->modifiers()
+        << "text:" << event->text();
 
     bool handled = false;
 
@@ -86,6 +89,8 @@ void CharLineEdit::processKey(QKeyEvent* event) {
 
 // This is how you pick up the tab key
 bool CharLineEdit::focusNextPrevChild(bool next) {
+    qDebug() << "CharLineEdit::focusNextPrevChild, next =" << next;
+
     QKeyEvent event(QEvent::KeyPress, Qt::Key_Tab, next ? Qt::NoModifier : Qt::ShiftModifier);
     emit keyPressed(&event);
 
@@ -93,6 +98,10 @@ bool CharLineEdit::focusNextPrevChild(bool next) {
 }
 
 void CharLineEdit::keyPressEvent(QKeyEvent* event) {
+    qDebug() << "CharLineEdit::keyPressEvent, key:" << event->key()
+        << "mod:" << event->modifiers()
+        << "text:" << event->text();
+
     processKey(event);
 }
 
